@@ -327,8 +327,8 @@ DropLoc gameState::getBestDropLoc(gameBlock& cur, gameBlock& next) {
 					gameState next_state_cp(state_cp);
 					del_row_next = next_state_cp.drop_PD(next, nx, land_height);
 					if (next_state_cp.isGameOver()) continue;
-					//reward = next_state_cp.getReward(del_row_cur, del_row_next);
-					reward = next_state_cp.getReward_PD(del_row_next+del_row_cur, land_height);
+					reward = next_state_cp.getReward(del_row_cur, del_row_next);
+					//reward = next_state_cp.getReward_PD(del_row_next+del_row_cur, land_height);
 					if (reward > best_reward) {
 						best_reward = reward;
 						best.loc = x;

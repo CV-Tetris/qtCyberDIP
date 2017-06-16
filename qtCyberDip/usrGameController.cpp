@@ -8,7 +8,6 @@
 #define FAIL_STEP 12
 #define CHECK_STEP 12
 
-//鏋勯�犱笌鍒濆鍖�
 using namespace cv;
 
 struct ss {
@@ -35,7 +34,7 @@ void swap(int &a, int &b) {
 usrGameController::usrGameController(void* qtCD)
 {
 	qDebug() << "usrGameController online.";
-	device = new deviceCyberDip(qtCD);//璁惧浠ｇ悊绫�
+	device = new deviceCyberDip(qtCD);
 	cv::namedWindow(WIN_NAME);
 	
 	ifstream fin("../images/blocklabel/features.txt");
@@ -90,7 +89,6 @@ usrGameController::usrGameController(void* qtCD)
 	cv::setMouseCallback(WIN_NAME, mouseCallback, (void*)&(argM));
 }
 
-//鏋愭瀯
 usrGameController::~usrGameController()
 {
 	cv::destroyAllWindows();
@@ -137,7 +135,6 @@ void usrGameController::getStartButton(cv::Mat& img) {
 	split(img, channel);
 	Canny(channel[1], canny_output, thresh, thresh * 2, 3);
 
-	/// 瀵绘壘杞粨
 	findContours(canny_output, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
 
 	int len = contours.size();
@@ -154,7 +151,6 @@ void usrGameController::getStartButton(cv::Mat& img) {
 
 	sort(sss.begin(), sss.end(), comp);
 
-	///  璁＄畻涓績鐭�:
 	vector<Point2f> mc(len);
 	for (int i = 0; i < len; i++)
 	{
@@ -196,10 +192,10 @@ void usrGameController::initialLocation(cv::Mat& img) {
 	vector<int> stop_button(2, 0);
 
 	cvtColor(img, img_gray, CV_RGB2GRAY);
-	/// 鐢–anny绠楀瓙妫�娴嬭竟缂�
+
 	Canny(img_gray, canny_output, thresh, thresh * 2, 3);
 
-	/// 瀵绘壘杞粨
+
 	findContours(canny_output, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
 
 	int len = contours.size();
@@ -216,7 +212,6 @@ void usrGameController::initialLocation(cv::Mat& img) {
 
 	sort(sss.begin(), sss.end(), comp);
 
-	///  璁＄畻涓績鐭�:
 	vector<Point2f> mc(len);
 	for (int i = 0; i < len; i++)
 	{
@@ -247,7 +242,7 @@ void usrGameController::initialLocation(cv::Mat& img) {
 	vector<cv::Point> tmp(4);
 	bool flag = false;
 	int tmp_x, tmp_y, index;
-	radius = 5;
+	float radius = 5;
 	for (int num = 1; num < contours.size(); ++num){
 		index = sss[num].i;
 		tmp_x = int(round(mc[index].x));
@@ -472,7 +467,6 @@ vector<vector<int>> usrGameController::readFromImg(cv::Mat& img, bool isFirst) {
 	
 }
 
-//澶勭悊鍥惧儚 
 int usrGameController::usrProcessImage(cv::Mat& img)
 {
 	
@@ -483,7 +477,6 @@ int usrGameController::usrProcessImage(cv::Mat& img)
 		return -1;
 	}
 
-	//鎴彇鍥惧儚杈圭紭
 	cv::Mat rgba_pt = img(cv::Rect(0, UP_CUT, imgSize.width,imgSize.height));
 	cv::Mat pt, main_area, tmp;
 	vector<Mat> hsv_model;
@@ -530,7 +523,7 @@ int usrGameController::usrProcessImage(cv::Mat& img)
 		}
 		Op_delay = 950;
 		qDebug() << "Initializing...";
-		if(background[WIDTH] == 0) initialLocation(pt);
+		initialLocation(pt);
 		currentState.clear();
 		cvtColor(pt(Rect(background[LEFT], background[UP], background[WIDTH], background[HEIGHT])), main_area, CV_RGB2HSV);
 		split(main_area, hsv_model);
@@ -631,20 +624,24 @@ int usrGameController::usrProcessImage(cv::Mat& img)
 			qDebug() << "Check...";
 		}
 		else {
-			if (block_tmp.r != 4 && block_tmp.r != currentBestLoc.rotation) {
-				click(ROTATEB);
-			}
-			else if (block_tmp.loc != currentBestLoc.loc){
-				if (block_tmp.loc < currentBestLoc.loc) click(RIGHTB);
-				else if (block_tmp.loc > currentBestLoc.loc) click(LEFTB);
-			}
-			else if(jump_flag && block_tmp.r == 4){
+			if (block_tmp.r == 4) {
 				if (++fail_count > FAIL_STEP) {
 					currentRecursiveState = DROP;
+					click(DROPB, true);
 					qDebug() << "Reading Block Fail...";
 					qDebug() << "Dropping...";
 				}
 			}
+			else if (block_tmp.r != currentBestLoc.rotation) {
+				click(ROTATEB);
+				fail_count = 0;
+			}
+			else if (block_tmp.loc != currentBestLoc.loc){
+				fail_count = 0;
+				if (block_tmp.loc < currentBestLoc.loc) click(RIGHTB);
+				else if (block_tmp.loc > currentBestLoc.loc) click(LEFTB);
+			}
+			
 		}
 		break;
 	case CHECK:
@@ -670,6 +667,7 @@ int usrGameController::usrProcessImage(cv::Mat& img)
 		if (block_tmp.loc == currentBestLoc.loc && block_tmp.r == currentBestLoc.rotation) {
 			if (++check_count > CHECK_STEP) {
 				currentRecursiveState = DROP;
+				click(DROPB, true);
 				qDebug() << "Dropping...";
 			}
 		}
@@ -695,7 +693,7 @@ int usrGameController::usrProcessImage(cv::Mat& img)
 		else {
 			
 			if (!waitUp) {
-				click(DROPB, true);
+				
 				device->comHitDown();
 			}
 			waitUp = true;
@@ -714,11 +712,12 @@ int usrGameController::usrProcessImage(cv::Mat& img)
 			qDebug() << "Start New Game";
 			currentRecursiveState = MENU;
 		}
-		else if (isInitialed) { //防止广告
+		else if (isInitialed) { 
 			nextType = getBlockType(pt(Rect(next_background[LEFT], next_background[UP], next_background[WIDTH], next_background[HEIGHT])));
 			if (nextType != NONE) {
 				qDebug() << "Reconnect to Game";
 				isGame = true;
+				initialLocation(pt);
 				cvtColor(pt(Rect(background[LEFT], background[UP], background[WIDTH], background[HEIGHT])), tmp, CV_RGB2HSV);
 				split(tmp, hsv_model);
 				tmp = hsv_model[2];
@@ -749,7 +748,7 @@ void mouseCallback(int event, int x, int y, int flags, void*param)
 	usrGameController::MouseArgs* m_arg = (usrGameController::MouseArgs*)param;
 	switch (event)
 	{
-	case CV_EVENT_LBUTTONUP:case CV_EVENT_RBUTTONUP: // 宸�/鍙抽敭寮硅捣
+	case CV_EVENT_LBUTTONUP:case CV_EVENT_RBUTTONUP: 
 	{
 		m_arg->Hit = true;
 	}

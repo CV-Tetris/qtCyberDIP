@@ -29,11 +29,16 @@ private:
 	vector<Pair> hw_pairs;
 public:
 	friend class gameState;
+	//构造函数，初始化
 	gameBlock(BlockType t = BlockType::SQUARE, int c = 0);
+	//拷贝构造函数，用于赋值
 	gameBlock(gameBlock& tmp);
+	//旋转
 	void rotate();
 	/*for test*/
+	//展示当前造型
 	void show();
+	//展示当前类别的所有造型
 	void showAll();
 	/*end for test*/
 };

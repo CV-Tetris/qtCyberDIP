@@ -71,10 +71,34 @@ private:
 	int check_count;
 	int Op_delay;
 	chrono::steady_clock::time_point lastOp = chrono::steady_clock::now();
-	
-//以下是为了实现演示效果，增加的内容
+
+	//LSH特征提取
+	vector<double> getFeature(cv::Mat& img);
+	//获取Menu中开始键位置
+	void getStartButton(cv::Mat& img);
+	//判断总体界面是否为Menu
+	bool isMenu(cv::Mat& img);
+	//获取游戏功能区域和按键
+	void initialLocation(cv::Mat& img);
+	//点击操作按键
+	void click(ButtonType bt, bool moveOnly = false);
+	//获取下一块俄罗斯方块类型
+	BlockType getBlockType(cv::Mat& img);
+	//获取背景区域的布局情况
+	vector<vector<int>> readFromImg(cv::Mat& img, bool isFirst = false);
+	//从布局矩阵中获取正在下落的方块的位置
+	Tmp readBlockFromMatrix(vector<vector<int>> grid, bool isFirst = false);
+	/*for test*/
+	//展示检测到的功能区域和按键
+	void showDetection(cv::Mat& img);
+	//展示检测出的背景区域的布局
+	void combineAndshow(cv::Mat& img, cv::Mat& main_area);
+	//展示gameState布局
+	void showState(cv::Mat& img);
+	//保存当前界面图像
+	void savePicture(cv::Mat& img);
 	//鼠标回调结构体
-	struct MouseArgs{
+	struct MouseArgs {
 		cv::Rect box;
 		bool Drawing, Hit;
 		// init
@@ -86,20 +110,6 @@ private:
 	//鼠标回调函数
 	friend void  mouseCallback(int event, int x, int y, int flags, void*param);
 	MouseArgs argM;
-//以上是为了实现课堂演示效果，增加的内容
-	vector<double> getFeature(cv::Mat& img);
-	void getStartButton(cv::Mat& img);
-	bool isMenu(cv::Mat& img);
-	void initialLocation(cv::Mat& img);
-	void click(ButtonType bt, bool moveOnly = false);
-	BlockType getBlockType(cv::Mat& img);
-	vector<vector<int>> readFromImg(cv::Mat& img, bool isFirst = false);
-	Tmp readBlockFromMatrix(vector<vector<int>> grid, bool isFirst = false);
-	/*for test*/
-	void showDetection(cv::Mat& img);
-	void combineAndshow(cv::Mat& img, cv::Mat& main_area);
-	void showState(cv::Mat& img);
-	void savePicture(cv::Mat& img);
 	/*end for test*/
 	
 public:
@@ -107,14 +117,12 @@ public:
 	usrGameController(void* qtCD);
 	//析构函数，回收本类所有资源
 	~usrGameController();
-	
+	//图像处理，逐帧接受图像
 	int usrProcessImage(cv::Mat& img);
 };
 
-//以下是为了实现演示效果，增加的内容
 //鼠标回调函数
 void  mouseCallback(int event, int x, int y, int flags, void*param);
-//以上是为了实现课堂演示效果，增加的内容
 
 #endif
 #endif
